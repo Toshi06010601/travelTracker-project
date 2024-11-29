@@ -19,9 +19,17 @@ app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
   const result = await db.query("SELECT country_code FROM visited_countries");
-  console.log(result.rows);
-  res.render("index.ejs", { countries: JSON.stringify(result.rows), total: result.rows.length, hi: "<script>alert('Hi')</script>"});
-  // await db.end();
+  const countries = result.rows;
+  const country_codes = [];
+
+  countries.forEach(country => {
+    country_codes.push(country.country_code);
+  });
+
+  console.log(country_codes);
+
+  res.render("index.ejs", { countries: country_codes, total: result.rows.length});
+  await db.end();
 });
 
 app.listen(port, () => {
