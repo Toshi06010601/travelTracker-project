@@ -32,11 +32,14 @@ app.get("/", async (req, res) => {
 });
 
 app.post("/add", async (req, res) => {
-  const result = await db.query("SELECT country_code FROM countries where country_name = $1", [req.body.country]);
-  const country_code = result.rows[0].country_code;
-  console.log(country_code);
-
-  await db.query("INSERT INTO visited_countries (country_code) VALUES($1)", [country_code]);
+  const input = req.body["country"];
+  const result = await db.query("SELECT country_code FROM countries where country_name = $1", [input]);
+  if(result.rows.length !== 0) {
+    const country_code = result.rows[0].country_code;
+    await db.query("INSERT INTO visited_countries (country_code) VALUES($1)", [country_code]);
+  } else {
+    console.log("There was no matching country in the tabel for ", input);
+  }
 
   res.redirect('/');
 });
