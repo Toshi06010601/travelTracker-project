@@ -30,23 +30,43 @@ const checkVisited = async () => {
 
 };
 
+const addVisitedCountry = async (country_code) => {
+  try {
+    await db.query("INSERT INTO visited_countries (country_code) VALUES($1)", [country_code]);
+    return "";
+  } catch (err) {
+    console.log(err.message);
+    return "Country has been already added, try again.";
+  }
+}
+
 app.get("/", async (req, res) => {
   const country_codes = await checkVisited();
-
-  res.render("index.ejs", { countries: country_codes, total: country_codes.length});
+  res.render("index.ejs", { countries: country_codes, total: country_codes.length });
 });
 
 app.post("/add", async (req, res) => {
   const input = req.body["country"];
-  const result = await db.query("SELECT country_code FROM countries where country_name = $1", [input]);
-  if(result.rows.length !== 0) {
+  let error_message = "";
+
+  try {
+    //Look up coutry code
+    const result = await db.query("SELECT country_code FROM countries where country_name = $1", [input]);
+
+    //Try to add a new country to visited countries table
     const country_code = result.rows[0].country_code;
-    await db.query("INSERT INTO visited_countries (country_code) VALUES($1)", [country_code]);
-  } else {
-    console.log("There was no matching country in the tabel for ", input);
+    error_message = await addVisitedCountry(country_code);
+
+  } catch(err) {
+
+    console.log("There is no matching country for " + input)
+    error_message = "Country doesn't exist, try again.";
+
   }
 
-  res.redirect('/');
+  //Get updated visited countries list
+  const country_codes = await checkVisited();
+  res.render("index.ejs", { countries: country_codes, total: country_codes.length, error: error_message });
 });
 
 app.listen(port, () => {
