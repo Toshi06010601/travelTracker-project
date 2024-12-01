@@ -51,7 +51,7 @@ app.post("/add", async (req, res) => {
 
   try {
     //Look up coutry code
-    const result = await db.query("SELECT country_code FROM countries where country_name = $1", [input]);
+    const result = await db.query("SELECT country_code FROM countries where LOWER(country_name) LIKE '%' || $1 || '%'", [input.toLowerCase()]);
 
     //Try to add a new country to visited countries table
     const country_code = result.rows[0].country_code;
